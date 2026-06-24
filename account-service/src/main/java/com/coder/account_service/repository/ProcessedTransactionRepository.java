@@ -10,4 +10,6 @@ import java.util.Optional;
 public interface ProcessedTransactionRepository extends JpaRepository<ProcessedTransaction,Long> {
 
     Optional<ProcessedTransaction> findByTransCode(String transCode);
+
+    boolean existsByTransCode(String transCode);
 }

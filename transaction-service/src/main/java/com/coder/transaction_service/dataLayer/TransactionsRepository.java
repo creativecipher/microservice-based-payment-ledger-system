@@ -20,4 +20,7 @@ public interface TransactionsRepository extends JpaRepository<Transactions,Long>
             " SET t.transStatus = :status " +
             " WHERE t.transCode = :transCode")
     int updateTransactionStatus(@Param("transCode") String transCode,@Param("status") TransactionStatus status);
+
+
+
 }

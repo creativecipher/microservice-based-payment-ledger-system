@@ -11,5 +11,5 @@ public interface AccountService {
     public ResponseEntity createAccount(AccountCreationRequest req);
     public ResponseEntity<ResponseVO<Boolean>> transferAmount(AmountTransferReqDto req);
 
-//    ResponseEntity<ResponseVO<Boolean>> verifyProcessedTransaction(String transCode);
+    ResponseEntity<ResponseVO<Boolean>> verifyProcessedTransaction(String transCode);
 }

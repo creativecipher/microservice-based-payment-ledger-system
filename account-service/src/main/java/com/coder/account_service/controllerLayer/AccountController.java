@@ -29,10 +29,10 @@ public class AccountController {
         return accountService.transferAmount(req);
     }
 
-//    @GetMapping("verify-transfer/{transCode}")
-//    public ResponseEntity<ResponseVO<Boolean>> verifyProcessedTransaction(@PathVariable String transCode){
-//        return accountService.verifyProcessedTransaction(transCode);
-//    }
+    @GetMapping("verify-transfer/{transCode}")
+    public ResponseEntity<ResponseVO<Boolean>> verifyProcessedTransaction(@PathVariable String transCode){
+        return accountService.verifyProcessedTransaction(transCode);
+    }
 }
 
 

@@ -219,13 +219,21 @@ public class AccountServiceImpl implements AccountService {
         return new ResponseEntity<>(res,HttpStatus.OK);
     }
 
-//    @Override
-//    public ResponseEntity<ResponseVO<Boolean>> verifyProcessedTransaction(String transCode) {
-//        Optional<ProcessedTransaction> existingProcessedTransactions = processedTransactionRepository.findByTransCode(transCode);
-//        if(existingProcessedTransactions.isPresent()){
-//            logger.info("Transaction Processed successfully!.",transCode);
-//        }
-//    }
+    @Override
+    public ResponseEntity<ResponseVO<Boolean>> verifyProcessedTransaction(String transCode) {
+
+        Boolean exists = processedTransactionRepository.existsByTransCode(transCode);
+
+        logger.info("ProcessedTransaction present | transCode={} | exists={}",transCode,exists);
+
+        ResponseVO<Boolean> res = new ResponseVO<>();
+        res.setStatusCode(HttpStatus.OK.value());
+        res.setMsg(exists?
+                "Processed Transaction present in account-service."
+                : "Processed Transaction not present in account-service.");
+        res.setResult(exists);
+        return new ResponseEntity<>(res,HttpStatus.OK);
+    }
 
     private void validateTransferAmountRequest(AmountTransferReqDto req){
         if (req == null) {
