@@ -15,11 +15,11 @@ public interface TransactionsRepository extends JpaRepository<Transactions,Long>
 
     Optional<Transactions> findByTransCode(String transCode);
 
-    @Modifying
-    @Query("UPDATE Transactions t " +
-            " SET t.transStatus = :status " +
-            " WHERE t.transCode = :transCode")
-    int updateTransactionStatus(@Param("transCode") String transCode,@Param("status") TransactionStatus status);
+//    @Modifying
+//    @Query("UPDATE Transactions t " +
+//            " SET t.transStatus = :status " +
+//            " WHERE t.transCode = :transCode")
+//    int updateTransactionStatus(@Param("transCode") String transCode,@Param("status") TransactionStatus status);
 
 
 

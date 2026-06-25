@@ -19,4 +19,4 @@ spring:
 
 customer:
   service:
-    url: http://localhost:8051/customer/
+    url: ${CUSTOMER_DETAILS_URL}

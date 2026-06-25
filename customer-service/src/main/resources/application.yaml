@@ -5,9 +5,9 @@ spring:
   application:
     name: customer-service
   datasource:
-    url: jdbc:mysql://localhost:3306/bank_customer_db?useSSL=false&serverTimezone=UTC
-    username: test
-    password: Pass@123
+    url: ${CUSTOMER_SERVICE_DB_URI}
+    username: ${DB_USER}
+    password: ${db_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
