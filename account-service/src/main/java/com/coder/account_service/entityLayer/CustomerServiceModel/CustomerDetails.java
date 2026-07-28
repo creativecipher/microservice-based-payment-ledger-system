@@ -1,4 +1,4 @@
-package com.coder.account_service.dataLayer.CustomerServiceModel;
+package com.coder.account_service.entityLayer.CustomerServiceModel;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

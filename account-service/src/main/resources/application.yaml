@@ -21,3 +21,9 @@ spring:
 customer:
   service:
     url: ${CUSTOMER_DETAILS_URL}
+
+
+# hardcoded-value
+bank:
+  security:
+    max-transfer-limit: ${MAX_LIMIT_TRANSFER}

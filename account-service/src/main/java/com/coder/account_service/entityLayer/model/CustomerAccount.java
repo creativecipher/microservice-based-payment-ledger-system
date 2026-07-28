@@ -1,7 +1,8 @@
-package com.coder.account_service.dataLayer.model;
+package com.coder.account_service.entityLayer.model;
 
 import com.coder.account_service.custom.exceptions.BadRequestException;
-import com.coder.account_service.dataLayer.enums.AccountType;
+import com.coder.account_service.entityLayer.enums.AccountStatus;
+import com.coder.account_service.entityLayer.enums.AccountType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -34,6 +35,10 @@ public class CustomerAccount {
     @Enumerated(EnumType.STRING)
     @Column(name = "account_type",nullable = false)
     private AccountType accountType;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "account_status",nullable = false)
+    private AccountStatus accountStatus;
 
     @Column(name = "balance",nullable = false)
     private BigDecimal balance;

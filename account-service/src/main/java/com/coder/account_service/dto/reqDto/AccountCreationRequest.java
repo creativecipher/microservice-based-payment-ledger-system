@@ -1,6 +1,6 @@
 package com.coder.account_service.dto.reqDto;
 
-import com.coder.account_service.dataLayer.enums.AccountType;
+import com.coder.account_service.entityLayer.enums.AccountType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

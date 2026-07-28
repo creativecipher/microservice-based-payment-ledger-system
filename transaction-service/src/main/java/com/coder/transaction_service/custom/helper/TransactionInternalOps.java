@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Set;
 
 @Component
 @RequiredArgsConstructor
@@ -66,5 +67,21 @@ public class TransactionInternalOps {
         responseVO.setMsg("Transaction status is uncertain due to a network or server error. It will be reconciled shortly.");
         responseVO.setResult(transaction);
         return new ResponseEntity<>(responseVO, HttpStatus.ACCEPTED);
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void updateBatchToSuccess(Set<String> transCodes){
+        if(transCodes!=null && !transCodes.isEmpty()){
+            transactionsRepository.updateTransactionStatus(transCodes,TransactionStatus.SUCCESS);
+            log.info("Batch reconciliation reconciled {} entries to SUCCESS",transCodes.size());
+        }
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void updateBatchToFailed(Set<String> transCodes){
+        if(transCodes!=null && !transCodes.isEmpty()){
+            transactionsRepository.updateTransactionStatus(transCodes,TransactionStatus.FAILED);
+            log.info("Batch reconciliation corrected {} entries to FAILED",transCodes.size());
+        }
     }
 }

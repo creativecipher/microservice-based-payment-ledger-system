@@ -1,6 +1,6 @@
 package com.coder.account_service.repository;
 
-import com.coder.account_service.dataLayer.model.CustomerAccount;
+import com.coder.account_service.entityLayer.model.CustomerAccount;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;

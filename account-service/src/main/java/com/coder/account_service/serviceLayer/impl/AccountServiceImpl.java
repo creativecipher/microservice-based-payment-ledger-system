@@ -3,24 +3,24 @@ package com.coder.account_service.serviceLayer.impl;
 import com.coder.account_service.custom.ResponseVO;
 import com.coder.account_service.custom.exceptions.BadRequestException;
 import com.coder.account_service.custom.exceptions.ResourceNotFoundException;
-import com.coder.account_service.custom.exceptions.TransactionFailedException;
-import com.coder.account_service.dataLayer.CustomerServiceModel.CustomerDetails;
-import com.coder.account_service.dataLayer.model.BankDetails;
-import com.coder.account_service.dataLayer.model.CustomerAccount;
-import com.coder.account_service.dataLayer.model.ProcessedTransaction;
+import com.coder.account_service.entityLayer.CustomerServiceModel.CustomerDetails;
+import com.coder.account_service.entityLayer.enums.AccountStatus;
+import com.coder.account_service.entityLayer.enums.EntryType;
+import com.coder.account_service.entityLayer.model.BankDetails;
+import com.coder.account_service.entityLayer.model.CustomerAccount;
+import com.coder.account_service.entityLayer.model.LedgerAudit;
+import com.coder.account_service.entityLayer.model.ProcessedTransaction;
 import com.coder.account_service.dto.reqDto.AccountCreationRequest;
 import com.coder.account_service.dto.reqDto.AmountTransferReqDto;
 import com.coder.account_service.repository.AccountRepository;
 import com.coder.account_service.repository.BankRepository;
+import com.coder.account_service.repository.LedgerAuditRepository;
 import com.coder.account_service.repository.ProcessedTransactionRepository;
 import com.coder.account_service.serviceLayer.AccountService;
-import com.coder.account_service.transaction_service.model.Transactions;
-import com.coder.account_service.transaction_service.model.enums.TransactionStatus;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.graphql.GraphQlProperties;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpMethod;
@@ -28,14 +28,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
-import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -49,10 +46,18 @@ public class AccountServiceImpl implements AccountService {
 
     private final ProcessedTransactionRepository processedTransactionRepository;
 
+    private final LedgerAuditRepository ledgerAuditRepository;
+
     private static final Logger logger = LoggerFactory.getLogger(AccountServiceImpl.class);
 
+    // @Value cannot inject into static field
+    // Spring Dependency Injection container injects values into instance fields when instantiating the bean component
+    // Static fields belong to the class object itself rather than a specific bean instance managed by Spring
     @Value("${customer.service.url}")
-    private static String CUSTOMER_DETAILS_URL ;
+    private String CUSTOMER_DETAILS_URL ;
+
+    @Value("${bank.security.max-transfer-limit}")
+    private BigDecimal MAX_LIMIT_TRANSFER;
 
     @Override
     public ResponseEntity createAccount(AccountCreationRequest req) {
@@ -186,6 +191,9 @@ public class AccountServiceImpl implements AccountService {
         Long firstId = Math.min(req.getFromAccount(), req.getToAccount());
         Long secondId = Math.max(req.getFromAccount(), req.getToAccount());
 
+        // Pessistement locking block
+        // row is lock , and other transaction for same row is wait until the current transaction is commit or roll back
+        // handle the situation where two trasaction hit the same row at same time(e.g. at same second)
         Optional<CustomerAccount> firstAccount = accountRepository.findByIdForUpdate(firstId);
         if(firstAccount.isEmpty()){
             throw new ResourceNotFoundException("Customer Account not found with id "+firstId);
@@ -199,10 +207,21 @@ public class AccountServiceImpl implements AccountService {
         CustomerAccount fromCustomerAccount = firstId.equals(req.getFromAccount())? firstAccount.get() : secondAccount.get();
         CustomerAccount toCustomerAccount = secondId.equals(req.getToAccount())?secondAccount.get() : firstAccount.get();
 
+        if(fromCustomerAccount.getAccountStatus() != AccountStatus.ACTIVE){
+            throw new BadRequestException("Source account is not ACTIVE. Current Status: "+fromCustomerAccount.getAccountStatus());
+        }
+
+        if(toCustomerAccount.getAccountStatus() != AccountStatus.ACTIVE){
+            throw new BadRequestException("Destination account is not ACTIVE. Current Status: "+fromCustomerAccount.getAccountStatus());
+        }
+
         BigDecimal fromAccountBalance = fromCustomerAccount.getBalance();
         if(fromAccountBalance.compareTo(req.getAmount()) < 0){
             throw new BadRequestException("Account has Insufficient balance for transfer!");
         }
+
+        // destination account balance
+        BigDecimal toAccountBalance = toCustomerAccount.getBalance();
 
         fromCustomerAccount.setBalance(fromAccountBalance.subtract(req.getAmount()));
 
@@ -210,6 +229,32 @@ public class AccountServiceImpl implements AccountService {
 
         accountRepository.save(fromCustomerAccount);
         accountRepository.save(toCustomerAccount);
+
+        // DEBIT (DR) -> Decrease a liability / decrease customer account balance
+        // Money leaving fromCustomerAccount
+        LedgerAudit ledgerAuditDebit = LedgerAudit
+                .builder()
+                .accountId(fromCustomerAccount.getAccountId())
+                .transCode(req.getTransCode().trim())
+                .entryType(EntryType.DEBIT)
+                .amount(req.getAmount())
+                .balanceBefore(fromAccountBalance)
+                .balanceAfter(fromCustomerAccount.getBalance())
+                .build();
+
+        // CREDIT (CR) -> Increases a liability / increase customer account balance
+        // Money entering toCustomerAccount
+        LedgerAudit ledgerAuditCredit = LedgerAudit
+                .builder()
+                .accountId(toCustomerAccount.getAccountId())
+                .transCode(req.getTransCode().trim())
+                .entryType(EntryType.CREDIT)
+                .amount(req.getAmount())
+                .balanceBefore(toAccountBalance)
+                .balanceAfter(toCustomerAccount.getBalance())
+                .build();
+
+        ledgerAuditRepository.saveAll(List.of(ledgerAuditDebit,ledgerAuditCredit));
 
         logger.info("From Account Id "+fromCustomerAccount.getAccountId()+" "+req.getAmount()+" amount transfer to Account Id "+toCustomerAccount.getAccountId());
         ResponseVO res = new ResponseVO();
@@ -219,19 +264,38 @@ public class AccountServiceImpl implements AccountService {
         return new ResponseEntity<>(res,HttpStatus.OK);
     }
 
+//    @Override
+//    public ResponseEntity<ResponseVO<Boolean>> verifyProcessedTransaction(String transCode) {
+//
+//        Boolean exists = processedTransactionRepository.existsByTransCode(transCode);
+//
+//        logger.info("ProcessedTransaction present | transCode={} | exists={}",transCode,exists);
+//
+//        ResponseVO<Boolean> res = new ResponseVO<>();
+//        res.setStatusCode(HttpStatus.OK.value());
+//        res.setMsg(exists?
+//                "Processed Transaction present in account-service."
+//                : "Processed Transaction not present in account-service.");
+//        res.setResult(exists);
+//        return new ResponseEntity<>(res,HttpStatus.OK);
+//    }
+
     @Override
-    public ResponseEntity<ResponseVO<Boolean>> verifyProcessedTransaction(String transCode) {
+    public ResponseEntity<ResponseVO<Set<String>>> verifyProcessedTransactions(Set<String> transCodes) {
+        if(transCodes==null || transCodes.isEmpty()){
+            ResponseVO<Set<String>> res = new ResponseVO<>();
+            res.setStatusCode(HttpStatus.BAD_REQUEST.value());
+            res.setMsg("Input data not found");
+            res.setResult(null);
+            return new ResponseEntity<>(res,HttpStatus.BAD_REQUEST);
+        }
+        Optional<Set<String>> existingTransCodesOpt = processedTransactionRepository.findByTransCodes(transCodes);
+        Set<String> existingTransCodes = existingTransCodesOpt.orElse(new HashSet<>());
 
-        Boolean exists = processedTransactionRepository.existsByTransCode(transCode);
-
-        logger.info("ProcessedTransaction present | transCode={} | exists={}",transCode,exists);
-
-        ResponseVO<Boolean> res = new ResponseVO<>();
+        ResponseVO<Set<String>> res = new ResponseVO<>();
         res.setStatusCode(HttpStatus.OK.value());
-        res.setMsg(exists?
-                "Processed Transaction present in account-service."
-                : "Processed Transaction not present in account-service.");
-        res.setResult(exists);
+        res.setMsg("Successfully fetched existing processed transactions.");
+        res.setResult(existingTransCodes);
         return new ResponseEntity<>(res,HttpStatus.OK);
     }
 
@@ -247,6 +311,12 @@ public class AccountServiceImpl implements AccountService {
         }
         if (req.getAmount() == null || req.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
             throw new BadRequestException("Invalid transfer amount provided.");
+        }
+//        if (req.getAmount().compareTo(BigDecimal.valueOf(50000d)) > 0) {
+//            throw new BadRequestException("Transfer amount limit exceed!");
+//        }
+        if (req.getAmount().compareTo(MAX_LIMIT_TRANSFER) > 0) {
+            throw new BadRequestException("Transfer amount limit exceed!");
         }
     }
 

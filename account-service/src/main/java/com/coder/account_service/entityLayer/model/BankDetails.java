@@ -1,4 +1,4 @@
-package com.coder.account_service.dataLayer.model;
+package com.coder.account_service.entityLayer.model;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

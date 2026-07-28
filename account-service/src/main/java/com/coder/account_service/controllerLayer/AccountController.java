@@ -4,12 +4,12 @@ import com.coder.account_service.custom.ResponseVO;
 import com.coder.account_service.dto.reqDto.AccountCreationRequest;
 import com.coder.account_service.dto.reqDto.AmountTransferReqDto;
 import com.coder.account_service.serviceLayer.AccountService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.math.BigDecimal;
+import java.util.Set;
 
 @RestController
 @RequiredArgsConstructor
@@ -29,10 +29,16 @@ public class AccountController {
         return accountService.transferAmount(req);
     }
 
-    @GetMapping("verify-transfer/{transCode}")
-    public ResponseEntity<ResponseVO<Boolean>> verifyProcessedTransaction(@PathVariable String transCode){
-        return accountService.verifyProcessedTransaction(transCode);
+//    @GetMapping("verify-transfer/{transCode}")
+//    public ResponseEntity<ResponseVO<Boolean>> verifyProcessedTransaction(@PathVariable String transCode){
+//        return accountService.verifyProcessedTransaction(transCode);
+//    }
+
+    @PostMapping("verify-transfers")
+    public ResponseEntity<ResponseVO<Set<String>>> verifyProcessedTransactions(@RequestBody Set<String> transCodes){
+        return accountService.verifyProcessedTransactions(transCodes);
     }
+
 }
 
 

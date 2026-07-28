@@ -14,6 +14,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Map;
+import java.util.Set;
+
 @Component
 @RequiredArgsConstructor
 @Log4j2
@@ -54,4 +57,37 @@ public class AccountServiceGateway {
                 e
         );
     }
+
+
+
+    /* ===================================================================================================== */
+    /*                                  "verify-transfers"                                                   */
+    /* ===================================================================================================== */
+
+    @CircuitBreaker(name="verifyTransferBreaker",
+            fallbackMethod = "verifyTransferFallbackMtd")
+    public ResponseEntity<ResponseVO<Set<String>>> verifyProcessedTransaction(Set<String> transCodes){
+        HttpEntity<Set<String>> reqDtoHttpEntity = new HttpEntity<>(transCodes);
+
+        return restTemplate.exchange(
+                ACCOUNT_SERVICE_URL+"verify-transfers",
+                HttpMethod.POST,
+                reqDtoHttpEntity,
+                new ParameterizedTypeReference<ResponseVO<Set<String>>>() {}
+        );
+    }
+
+    public ResponseEntity<ResponseVO<Set<String>>> verifyTransferFallbackMtd(Set<String> transCodes, Exception e){
+        log.error("Fallback is executed because account-service down so transfer-verify cannot perform!");
+        log.error("CIRCUIT BREAKER TRIGGERED for outbound call. transCode: {}. Reason: {}",transCodes,e.getMessage());
+        // Throwing this guarantees our service implementation knows exactly which ledger row is stranded
+        throw new RemoteInfrastructureException(
+                "Account service unavailable or timed out.",
+                "",
+                e
+        );
+    }
+
+
+
 }
