@@ -1,5 +1,6 @@
 server:
-  port: 8052
+  # 8052 is default port if server_port not set
+  port: ${SERVER_PORT:8052}
 spring:
   application:
     name: account-service

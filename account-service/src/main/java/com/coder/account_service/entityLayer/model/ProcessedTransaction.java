@@ -1,6 +1,8 @@
 package com.coder.account_service.dataLayer.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -35,6 +37,8 @@ public class ProcessedTransaction {
     private String transCode;
 
     @Column(name = "trans_amount",nullable = false)
+    @DecimalMin(value="0.01",inclusive = true,message = "Amount must be greater than 0")
+    @DecimalMax(value="50000.00",message = "Amount cannot exceed 50000")
     private BigDecimal amount;
 
     @Column(name = "processed_trans_created_at",nullable = false,updatable = false)

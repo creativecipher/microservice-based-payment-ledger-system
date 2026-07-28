@@ -33,6 +33,11 @@ build/
 .vscode/
 
 
-# Environment variables
+# Environment variables for single project
+#.env
+#.env.*
+
+# Environment variables for microservices
 .env
-.env.*
+**/.env
+**/.env.*
