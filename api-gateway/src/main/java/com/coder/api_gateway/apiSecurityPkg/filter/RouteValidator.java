@@ -12,7 +12,7 @@ public class RouteValidator {
     // List of open, public endpoints that bypass JWT validation
     public static final List<String> openApiEndpints = List.of(
             "/customer/register-customer",
-            "/customer/login",
+            "/customer-auth/login",
             "/eureka"
     );
     public Predicate<ServerHttpRequest> isSecured =

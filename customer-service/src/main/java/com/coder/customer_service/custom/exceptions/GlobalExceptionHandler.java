@@ -24,6 +24,38 @@ public class GlobalExceptionHandler {
                 .build();
         return new ResponseEntity<>(errorResponse,HttpStatus.NOT_FOUND);
     }
+
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<ErrorResponse> handleBadRequestException(BadRequestException ex, WebRequest request){
+        ErrorResponse errorResponse = ErrorResponse
+                .builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.BAD_REQUEST.value())
+                .error(HttpStatus.BAD_REQUEST.getReasonPhrase())
+                // Security tip: Avoid exposing raw system error messages to clients
+//                .message("An unexpected error occurred: " + ex.getMessage())
+                .message("An unexpected bad request error occurred." )
+                .path(request.getDescription(false).replace("uri=",""))
+                .build();
+        return new ResponseEntity<>(errorResponse,HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<ErrorResponse> handleUnauthorizedException(UnauthorizedException ex, WebRequest request){
+        ErrorResponse errorResponse = ErrorResponse
+                .builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.UNAUTHORIZED.value())
+                .error(HttpStatus.UNAUTHORIZED.getReasonPhrase())
+                // Security tip: Avoid exposing raw system error messages to clients
+//                .message("An unexpected error occurred: " + ex.getMessage())
+                .message("An unexpected unauthorized error occurred." )
+                .path(request.getDescription(false).replace("uri=",""))
+                .build();
+        return new ResponseEntity<>(errorResponse,HttpStatus.UNAUTHORIZED);
+    }
+
+
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ErrorResponse> handleRuntimeException(Exception ex, WebRequest request){
         ErrorResponse errorResponse = ErrorResponse

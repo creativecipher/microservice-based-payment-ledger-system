@@ -12,7 +12,7 @@ spring:
         - id: customer-service
           uri: lb://CUSTOMER-SERVICE
           predicates:
-            - Path=/customer/**
+            - Path=/customer/**,/customer-auth/**
 
         # 2. Account Service Route
         - id: account-service
