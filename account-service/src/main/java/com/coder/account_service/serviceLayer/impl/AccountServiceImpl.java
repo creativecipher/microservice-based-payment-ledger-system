@@ -53,6 +53,8 @@ public class AccountServiceImpl implements AccountService {
     // @Value cannot inject into static field
     // Spring Dependency Injection container injects values into instance fields when instantiating the bean component
     // Static fields belong to the class object itself rather than a specific bean instance managed by Spring
+
+
     @Value("${customer.service.url}")
     private String CUSTOMER_DETAILS_URL ;
 

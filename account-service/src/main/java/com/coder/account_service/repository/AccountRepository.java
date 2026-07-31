@@ -14,7 +14,7 @@ import java.util.Optional;
 public interface AccountRepository extends JpaRepository<CustomerAccount,Long> {
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT c FROM CustomerAccount " +
+    @Query("SELECT c FROM CustomerAccount c " +
             "WHERE c.accountId = :id")
     Optional<CustomerAccount> findByIdForUpdate(@Param("id") Long id);
 
