@@ -2,11 +2,13 @@ server:
   # 8052 is default port if server_port not set
   port: ${SERVER_PORT:8052}
 spring:
+#  config:
+#    import: optional:file:.env
   application:
     name: account-service
   datasource:
-    #url: ${ACCOUNT_SERVICE_DB_URI}
-    url: jdbc:mysql://localhost:3306/bank_account_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    url: ${ACCOUNT_SERVICE_DB_URI}
+    #url: jdbc:mysql://localhost:3306/bank_account_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
     username: ${DB_USER}
     password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -30,12 +32,16 @@ eureka:
   instance:
     prefer-ip-address: true
 
-customer:
-  service:
-    url: ${CUSTOMER_DETAILS_URL}
+#customer:
+#  service:
+#    url: ${CUSTOMER_DETAILS_URL}
+##    url: http://localhost:8051/customer/
+#
+#
+## hardcoded-value
+#bank:
+#  security:
+#    max-transfer-limit: ${MAX_LIMIT_TRANSFER}
+##    max-transfer-limit: 50000
+#
 
-
-# hardcoded-value
-bank:
-  security:
-    max-transfer-limit: ${MAX_LIMIT_TRANSFER}

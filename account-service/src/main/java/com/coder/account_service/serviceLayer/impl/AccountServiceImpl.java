@@ -17,6 +17,7 @@ import com.coder.account_service.repository.BankRepository;
 import com.coder.account_service.repository.LedgerAuditRepository;
 import com.coder.account_service.repository.ProcessedTransactionRepository;
 import com.coder.account_service.serviceLayer.AccountService;
+//import io.github.cdimascio.dotenv.Dotenv;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,18 +49,26 @@ public class AccountServiceImpl implements AccountService {
 
     private final LedgerAuditRepository ledgerAuditRepository;
 
-    private static final Logger logger = LoggerFactory.getLogger(AccountServiceImpl.class);
+    private final Logger logger = LoggerFactory.getLogger(AccountServiceImpl.class);
 
     // @Value cannot inject into static field
     // Spring Dependency Injection container injects values into instance fields when instantiating the bean component
     // Static fields belong to the class object itself rather than a specific bean instance managed by Spring
 
+    // fetch the details from .env file
+//    private final Dotenv dotenv = Dotenv.load();
+//
+//
+//    private String CUSTOMER_DETAILS_URL  = dotenv.get("CUSTOMER_DETAILS_URL");
+//
+//    private BigDecimal MAX_LIMIT_TRANSFER = BigDecimal.valueOf(Long.parseLong(dotenv.get("MAX_LIMIT_TRANSFER")));
 
-    @Value("${customer.service.url}")
-    private String CUSTOMER_DETAILS_URL ;
+    @Value("${CUSTOMER_DETAILS_URL}")
+    private String CUSTOMER_DETAILS_URL ;// = dotenv.get("CUSTOMER_DETAILS_URL");
 
-    @Value("${bank.security.max-transfer-limit}")
-    private BigDecimal MAX_LIMIT_TRANSFER;
+    @Value("${MAX_LIMIT_TRANSFER}")
+    private BigDecimal MAX_LIMIT_TRANSFER ;//= BigDecimal.valueOf(Long.parseLong(dotenv.get("MAX_LIMIT_TRANSFER")));
+
 
     @Override
     public ResponseEntity createAccount(AccountCreationRequest req) {

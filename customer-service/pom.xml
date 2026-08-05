@@ -66,11 +66,18 @@
 			<artifactId>spring-boot-starter-validation</artifactId>
 		</dependency>
 
-		<!-- Dotenv dependency to automatically read .env files in application file -->
+		<!-- Below 2 dependencies to use .env credentials in project -->
+		<!-- 1. Dotenv dependency to automatically read .env files in application file  -->
 		<dependency>
 			<groupId>me.paulschwarz</groupId>
 			<artifactId>spring-dotenv</artifactId>
 			<version>4.0.0</version>
+		</dependency>
+		<!-- 2. Dotenv dependency to automatically read .env files in class files -->
+		<dependency>
+			<groupId>io.github.cdimascio</groupId>
+			<artifactId>dotenv-java</artifactId>
+			<version>3.2.0</version>
 		</dependency>
 		<!-- -->
 
